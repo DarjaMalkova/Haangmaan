@@ -1,0 +1,164 @@
+import random
+import json
+
+def choose_word():
+    words = ['безперспективняк', 'небула', 'призыватель', 'геншин', 'токийский гуль', 'питон', 'промышленный информатик']
+    return random.choice(words)
+
+def display_hangman(attempts):
+    stages = [
+        """
+        ---------
+        |       |
+        |       O
+        |      \\|/
+        |       |
+        |      / \\
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       O
+        |      \\|/
+        |       |
+        |      / 
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       O
+        |      \\|/
+        |       |
+        |      
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       O
+        |      \\|
+        |       |
+        |      
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       O
+        |       |
+        |       |
+        |      
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       O
+        |      
+        |       
+        |      
+        -
+        """,
+        """
+        ---------
+        |       |
+        |       
+        |      
+        |       
+        |      
+        -
+        """
+    ]
+    return stages[attempts]
+
+def display_word(word, guessed_letters):
+    display = ''
+    for letter in word:
+        if letter in guessed_letters:
+            display += letter
+        else:
+            display += '_'
+    return display
+
+def load_records():
+    try:
+        with open('hangman_records.json', 'r') as file:
+            records = json.load(file)
+    except FileNotFoundError:
+        records = {}
+    return records
+
+def save_records(records):
+    with open('hangman_records.json', 'w') as file:
+        json.dump(records, file)
+
+def display_records(records):
+    print("\nРекорды:")
+    for player, score in records.items():
+        print(f"{player}: {score} побед")
+
+def update_records(player, records):
+    if player in records:
+        records[player] += 1
+    else:
+        records[player] = 1
+
+def hangman():
+    records = load_records()
+
+    while True:
+        word = choose_word()
+        guessed_letters = []
+        attempts = 6
+
+        print("Добро пожаловать в виселицу!")
+
+        while attempts > 0:
+            print("\nОсталось попыток:", attempts)
+            print(display_hangman(attempts))
+            display = display_word(word, guessed_letters)
+            print(display)
+
+            if '_' not in display:
+                print("Поздравляю! Вы угадали слово:", word)
+                update_records(player_name, records)
+                save_records(records)
+                break
+
+            guess = input("Угадайте букву или введите слово целиком: ").lower()
+
+            if len(guess) == 1:  # Если введена одна буква
+                if guess in guessed_letters:
+                    print("Вы уже угадывали эту букву!")
+                elif guess in word:
+                    guessed_letters.append(guess)
+                    print("Отлично!")
+                else:
+                    attempts -= 1
+                    print("Неверно!")
+            elif len(guess) == len(word):  # Если введено слово целиком
+                if guess == word:
+                    print("Поздравляю! Вы угадали слово:", word)
+                    update_records(player_name, records)
+                    save_records(records)
+                    break
+                else:
+                    attempts -= 1
+                    print("Неверно!")
+            else:
+                print("Введите либо одну букву, либо слово целиком!")
+
+        if attempts == 0:
+            print("\nВы использовали все попытки! Загаданное слово было:", word)
+            save_records(records)
+
+        display_records(records)
+
+        play_again = input("Хотите сыграть еще раз? (Да/Нет): ").lower()
+        if play_again != 'да':
+            break
+
+player_name = input("Введите ваше имя: ")
+hangman()
